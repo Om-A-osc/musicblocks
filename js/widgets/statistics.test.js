@@ -1,7 +1,7 @@
 /**
  * MusicBlocks
  *
- * @author Om-A-osc 
+ * @author Om-A-osc
  *
  * @copyright 2026 Om-A-osc
  *
@@ -20,9 +20,9 @@
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
 
-const { StatsWindow } = require('./statistics.js');
+const { StatsWindow } = require("./statistics.js");
 
-describe('StatsWindow', () => {
+describe("StatsWindow", () => {
     let statsWindow;
     let mockActivity;
     let mockWidgetWindowInstance;
@@ -38,7 +38,7 @@ describe('StatsWindow', () => {
 
         // Mock DOM elements and global functions/objects
         const mockBody = {
-            innerHTML: '',
+            innerHTML: "",
             style: {},
             appendChild: jest.fn(),
             getBoundingClientRect: jest.fn(() => ({ height: 500 }))
@@ -63,42 +63,46 @@ describe('StatsWindow', () => {
         const MockWidgetWindows = {
             windowFor: jest.fn(() => mockWidgetWindowInstance)
         };
-        Object.defineProperty(window, 'widgetWindows', {
+        Object.defineProperty(window, "widgetWindows", {
             writable: true,
             value: MockWidgetWindows
         });
 
         mockMyChart = {
-            getContext: jest.fn(() => ({})), // Return a mock context
+            getContext: jest.fn(() => ({})) // Return a mock context
         };
-        global.docById = jest.fn((id) => {
-            if (id === 'myChart') {
+        global.docById = jest.fn(id => {
+            if (id === "myChart") {
                 return mockMyChart;
             }
-            return document.createElement('ul');
+            return document.createElement("ul");
         });
-        
-        document.createElement = jest.fn((tag) => {
-            if (tag === 'ul') {
+
+        document.createElement = jest.fn(tag => {
+            if (tag === "ul") {
                 return {
                     style: {},
-                    innerHTML: ''
+                    innerHTML: ""
                 };
             }
             return {};
         });
 
-        global.analyzeProject = jest.fn(() => ({ /* mock scores */ }));
+        global.analyzeProject = jest.fn(() => ({
+            /* mock scores */
+        }));
         global.runAnalytics = jest.fn();
-        global.scoreToChartData = jest.fn(() => ({ /* mock chart data */ }));
-        
+        global.scoreToChartData = jest.fn(() => ({
+            /* mock chart data */
+        }));
+
         const mockRadarChart = {
-            toBase64Image: jest.fn(() => 'data:image/png;base64,mocked-image-data')
+            toBase64Image: jest.fn(() => "data:image/png;base64,mocked-image-data")
         };
-        
+
         // The callback needs to be captured to be called manually.
         let onCompleteCallback;
-        global.getChartOptions = jest.fn((callback) => {
+        global.getChartOptions = jest.fn(callback => {
             onCompleteCallback = callback;
             return {
                 animation: {
@@ -120,18 +124,18 @@ describe('StatsWindow', () => {
         global.Chart = mockChartConstructor;
 
         mockImageConstructor = jest.fn(() => ({
-            src: '',
+            src: "",
             width: 0,
             style: {}
         }));
         global.Image = mockImageConstructor;
 
         // Mock document.body.style
-        Object.defineProperty(document, 'body', {
+        Object.defineProperty(document, "body", {
             writable: true,
             value: {
                 style: {
-                    cursor: 'default'
+                    cursor: "default"
                 }
             }
         });
@@ -141,13 +145,13 @@ describe('StatsWindow', () => {
             blocks: {
                 showBlocks: jest.fn(),
                 hideBlocks: jest.fn(),
-                activeBlock: null,
+                activeBlock: null
             },
             logo: {
-                statsWindow: null,
+                statsWindow: null
             },
             loading: false,
-            showBlocksAfterRun: false,
+            showBlocksAfterRun: false
         };
 
         statsWindow = new StatsWindow(mockActivity);
@@ -158,7 +162,7 @@ describe('StatsWindow', () => {
         }
     });
 
-    test('constructor initializes correctly', () => {
+    test("constructor initializes correctly", () => {
         expect(statsWindow).toBeDefined();
         expect(statsWindow.activity).toBe(mockActivity);
         expect(statsWindow.isOpen).toBe(true);
@@ -170,7 +174,7 @@ describe('StatsWindow', () => {
         expect(global.analyzeProject).toHaveBeenCalledWith(mockActivity);
     });
 
-    test('onclose callback sets isOpen to false, shows blocks, destroys window, and nulls statsWindow', () => {
+    test("onclose callback sets isOpen to false, shows blocks, destroys window, and nulls statsWindow", () => {
         expect(statsWindow.widgetWindow.onclose).toBeInstanceOf(Function);
 
         statsWindow.widgetWindow.onclose();
@@ -181,7 +185,7 @@ describe('StatsWindow', () => {
         expect(mockActivity.logo.statsWindow).toBeNull();
     });
 
-    test('doAnalytics calls analytics functions and updates DOM', () => {
+    test("doAnalytics calls analytics functions and updates DOM", () => {
         // Since doAnalytics is called in the constructor, we can check the effects.
         expect(mockActivity.blocks.activeBlock).toBeNull();
         expect(global.docById).toHaveBeenCalledWith("myChart");
@@ -201,7 +205,7 @@ describe('StatsWindow', () => {
         // After the Chart callback, check Image and appendChild
         expect(mockImageConstructor).toHaveBeenCalled();
         const imgInstance = mockImageConstructor.mock.results[0].value;
-        expect(imgInstance.src).toBe('data:image/png;base64,mocked-image-data');
+        expect(imgInstance.src).toBe("data:image/png;base64,mocked-image-data");
         expect(imgInstance.width).toBe(200); // Not maximized by default
         expect(mockGetWidgetBody().appendChild).toHaveBeenCalledWith(imgInstance);
 
@@ -213,14 +217,14 @@ describe('StatsWindow', () => {
         expect(statsWindow.jsonObject.style.float).toBe("left");
         expect(mockGetWidgetBody().appendChild).toHaveBeenCalledWith(statsWindow.jsonObject);
     });
-    
-    test('doAnalytics adjusts image width when maximized', () => {
+
+    test("doAnalytics adjusts image width when maximized", () => {
         // This test is now self-contained
         jest.clearAllMocks(); // Clear all mocks to avoid interference from beforeEach
 
         // Redefine mocks needed for this specific test
         let capturedOnComplete;
-        const mockRadarChart = { toBase64Image: () => 'data:image/png;base64,mocked-image-data' };
+        const mockRadarChart = { toBase64Image: () => "data:image/png;base64,mocked-image-data" };
         mockChartConstructor = jest.fn().mockImplementation(() => ({
             Radar: jest.fn((data, options) => {
                 if (options && options.animation && options.animation.onComplete) {
@@ -230,13 +234,13 @@ describe('StatsWindow', () => {
             })
         }));
         global.Chart = mockChartConstructor;
-        global.Image = jest.fn(() => ({ src: '', width: 0, style: {} }));
+        global.Image = jest.fn(() => ({ src: "", width: 0, style: {} }));
         global.docById = jest.fn(() => ({ getContext: () => ({}) }));
-        
+
         mockWidgetWindowInstance.isMaximized.mockReturnValue(true); // Simulate maximized state
-        
+
         statsWindow.doAnalytics();
-        
+
         // Manually fire the callback that was captured inside this specific doAnalytics call
         if (capturedOnComplete) {
             capturedOnComplete();
@@ -247,7 +251,7 @@ describe('StatsWindow', () => {
         expect(imgInstance.width).toBe(500 - 80); // 420
     });
 
-    test('displayInfo correctly updates jsonObject innerHTML', () => {
+    test("displayInfo correctly updates jsonObject innerHTML", () => {
         const mockStats = {
             duples: 10,
             triplets: 5,
@@ -277,9 +281,9 @@ describe('StatsWindow', () => {
         expect(statsWindow.jsonObject.innerHTML).toBe(expectedHtml);
     });
 
-    test('onmaximize callback handles maximized and unmaximized states', () => {
+    test("onmaximize callback handles maximized and unmaximized states", () => {
         let capturedOnComplete;
-        global.getChartOptions = jest.fn((callback) => {
+        global.getChartOptions = jest.fn(callback => {
             capturedOnComplete = callback;
             return {
                 animation: { onComplete: callback }
@@ -303,9 +307,8 @@ describe('StatsWindow', () => {
         mockWidgetWindowInstance.isMaximized.mockReturnValue(false);
         statsWindow.widgetWindow.onmaximize();
         if (capturedOnComplete) capturedOnComplete();
-        
+
         expect(widgetBody.innerHTML).toBe(""); // Cleared again
         expect(widgetBody.style.padding).toBe("0 0");
     });
-
 });
